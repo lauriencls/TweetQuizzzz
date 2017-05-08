@@ -33,63 +33,57 @@ public class TweetquizzzzServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	private static final Logger log = Logger.getLogger(TweetquizzzzServlet.class.getName());
+	private Logger log = Logger.getLogger(TweetquizzzzServlet.class.getName());
 	
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String playerName = req.getParameter("playerName");
 		
-		/*
+		resp.setContentType("application/json");
+		
+		String playerName = req.getParameter("playerName");
+		log.info(playerName);
+		
+		getTweetsFromTweeter(playerName); //récupérer tweets de twitter et les ajouter dans datastore
+		
+		log.info("après  "+playerName);
 		Filter propertyFilterPlayed = new FilterPredicate("IsAlreadyPlayed", FilterOperator.EQUAL,false);
 		Query q = new Query("Tweet").setFilter(propertyFilterPlayed);
 		List<Entity> tweets = datastore.prepare(q).asList(FetchOptions.Builder.withDefaults());
-		
+		log.info("test ");
 		int nb = tweets.size();
-		Random r = new Random();
-		int i = 0;
 		
-		resp.setContentType("application/json");    
-		PrintWriter out = resp.getWriter();
-		
-		try{
-			JSONArray jsonArrayWithTweets = new JSONArray();
+		if(nb>=10){ //tweets suffisant dans datastore
+			    
+			PrintWriter out = resp.getWriter();
 			
-			do{
-				/*
-				String author = (String) tweets.get(r.nextInt(nb)).getProperty("Autor");
-				String content = (String) tweets.get(r.nextInt(nb)).getProperty("Content");
-				String falseAuthor1 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor1");
-				String falseAuthor2 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor2");
-				String falseAuthor3 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor3");
+			try{
 				
-				Boolean IsAlreadyPlayed = (Boolean) tweets.get(r.nextInt(nb)).getProperty("IsAlreadyPlayed");
-				if (IsAlreadyPlayed.equals(false)){
-					tweets.get(r.nextInt(nb)).setProperty("IsAlreadyPlayed",true);
-					datastore.put(tweets);
-				}
-
-				tweet t = new tweet(author, content, falseAuthor1, falseAuthor2, falseAuthor3);
-				
-				JSONObject tweetJson = new JSONObject();
-				tweetJson.put("author", t.getAuthor().toString());
-				tweetJson.put("content", t.getContent().toString());
-				tweetJson.put("falseAuthor1", t.getFalseAuthor1().toString());
-				tweetJson.put("falseAuthor2", t.getFalseAuthor2().toString());
-				tweetJson.put("falseAuthor3", t.getFalseAuthor3().toString());
-				
-				jsonArrayWithTweets.put(tweetJson);
-				
-				i++;
-			}while(i!=10);
+				JSONArray jsonArrayWithTweets = getTweetsFromDatastore(tweets);
 			
-			out.print(jsonArrayWithTweets);
-			out.flush();
-		} catch (JSONException e) {
-			e.printStackTrace();
+				out.print(jsonArrayWithTweets);
+				out.flush();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}else if(nb>0 && nb<10){//tweets pas assez suffisant 
+			getTweetsFromTweeter(playerName); // récupérer tweets de twitter
+		   
+			PrintWriter out = resp.getWriter();
+			
+			try{
+				JSONArray jsonArrayWithTweets = getTweetsFromDatastore(tweets);
+				
+				out.print(jsonArrayWithTweets);
+				out.flush();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 		}
-		*/
+		else{
+			resp.getWriter().println("Plus assez de tweets récents veuillez réessayer plus tard!");
+		}
 		
 		//CODE QUI MARCHE POUR L'EXEMPLE D'ENVOIE EN JSON
-		resp.setContentType("application/json");    
+	/*	resp.setContentType("application/json");    
 		PrintWriter out = resp.getWriter();
 		
 		try{
@@ -114,9 +108,52 @@ public class TweetquizzzzServlet extends HttpServlet {
 			
 		} catch (JSONException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 	}
+	
+	
+	public JSONArray getTweetsFromDatastore(List<Entity> tweets) throws JSONException{
+		
+		JSONArray jsonArrayWithTweets = new JSONArray();
+		
+		Random r = new Random();
+		int p = 0;
+		int nb = tweets.size();
+		do{
+			
+			String author = (String) tweets.get(r.nextInt(nb)).getProperty("Autor");
+			String content = (String) tweets.get(r.nextInt(nb)).getProperty("Content");
+			String falseAuthor1 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor1");
+			String falseAuthor2 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor2");
+			String falseAuthor3 = (String) tweets.get(r.nextInt(nb)).getProperty("falseAuthor3");
+			
+			Boolean IsAlreadyPlayed = (Boolean) tweets.get(r.nextInt(nb)).getProperty("IsAlreadyPlayed");
+			if (IsAlreadyPlayed.equals(false)){
+				tweets.get(r.nextInt(nb)).setProperty("IsAlreadyPlayed",true);
+				datastore.put(tweets);
+			}
+
+			tweet t = new tweet(author, content, falseAuthor1, falseAuthor2, falseAuthor3);
+			
+			JSONObject tweetJson = new JSONObject();
+			tweetJson.put("author", t.getAuthor().toString());
+			tweetJson.put("content", t.getContent().toString());
+			tweetJson.put("falseAuthor1", t.getFalseAuthor1().toString());
+			tweetJson.put("falseAuthor2", t.getFalseAuthor2().toString());
+			tweetJson.put("falseAuthor3", t.getFalseAuthor3().toString());
+			
+			jsonArrayWithTweets.put(tweetJson);
+			
+			p++;
+		}while(p!=10);
+		
+		return jsonArrayWithTweets;
+		
+	}
+	
+	
+	
 	
 	/*
 	 * Connexion ï¿½ un compte Twitter
@@ -147,6 +184,12 @@ public class TweetquizzzzServlet extends HttpServlet {
 			long cursor = -1;
 			IDs ids;
 			
+			if(playerName!=twitter.getScreenName()){
+				log.info("pas le meme");
+			}else{
+				log.info("meme");
+			}
+			
 			 do {
 				 //RÃ©cupÃ©ration des ID des comptes suivis par le joueur
 				 ids = twitter.getFriendsIDs(playerName, cursor);
@@ -162,7 +205,6 @@ public class TweetquizzzzServlet extends HttpServlet {
 						List<Status> lesStatuts = twitter.getUserTimeline(user.getScreenName(),paging);						
 						//Boucle sur les statuts
 						for (Status status : lesStatuts) {
-
 							Filter propertyFilter = new FilterPredicate("Content", FilterOperator.EQUAL,status.getText());
 							Query query = new Query("Tweet").setFilter(propertyFilter);
 							List<Entity> entities = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
@@ -180,7 +222,7 @@ public class TweetquizzzzServlet extends HttpServlet {
 								datastore.put(tweet);
 							}else{
 								
-								System.out.println("Le tweet existe dÃ©jÃ  ");
+								log.info("Le tweet existe déjà ");
 							}
 		
 						}	
@@ -188,8 +230,9 @@ public class TweetquizzzzServlet extends HttpServlet {
 				}
 			} while ((cursor = ids.getNextCursor()) != 0);
 			
+			
 		} catch (TwitterException ex) {
-		
+			log.info(ex.getErrorMessage());
 		}
 	}
 
