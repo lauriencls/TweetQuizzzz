@@ -21,19 +21,31 @@
       .when('/results', {
         templateUrl : '/assets/partials/results.html',
         controller  : 'resultsController'
+      })
+      
+      .when('/bestScores', {
+    	templateUrl : '/assets/partials/bestScores.html',
+    	controller  : 'bestScoresController'
       });
   });
 
 
     // create the controllers
   tweetQuiz.controller('mainController', function($scope, WebService, $window, $rootScope, $location) {
+	  $scope.loading = false;
     $scope.play = function(playerName) {
     	if (playerName){
+    		$scope.loading = true;
     		WebService.get("/tweetquizzzz?playerName="+playerName).$promise.then(function(data) {
-        		$rootScope.tweets = data;
-        		$rootScope.turn = 0;
-        		$rootScope.results = 0;
-        		$location.path('/inGame');
+    			if (data.error){
+    				$window.alert(data.error);
+    			} else {
+    				$rootScope.tweets = data;
+            		$rootScope.turn = 0;
+            		$rootScope.results = 0;
+            		$location.path('/inGame');
+    			}
+        		
           });
     	} else {
     		$window.alert("Vous devez saisir votre compte twitter!");
@@ -98,9 +110,18 @@
 
   tweetQuiz.controller('resultsController', function($scope, $rootScope, $location) {
 	  $scope.nbGoodAnswers = $rootScope.results;
-
+	  //WebService.get("/tweetquizzzz?playerName="+playerName&score=$scope.nbGoodAnswers).$promise.then(function(data) {}
 	  
 	  $scope.home = function() {
 		  $location.path('/');
 	  }
   });
+  
+  tweetQuiz.controller('bestScoresController', function($scope, $rootScope, $location) {
+	  /*
+	   * WebService.get("/tweetquizzzz?bestScore="getBestScores").$promise.then(function(data) {
+	   * 	$scope.bestScores = data;
+	   * }
+	  */
+  });
+  

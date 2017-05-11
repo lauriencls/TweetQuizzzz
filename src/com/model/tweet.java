@@ -1,10 +1,9 @@
 package com.model;
 
-import java.util.ArrayList;
-
-public class tweet {
+public class Tweet {
 
 	private String id;
+	private String playerName;
 	private String author;
 	private String content;
 	private boolean isAlreadyPlayed;
@@ -14,10 +13,11 @@ public class tweet {
 	
 	
 	
-	public tweet(String id, String author, String content, boolean isAlreadyPlayed, String falseAuthor1,
+	public Tweet(String id, String author, String playerName, String content, boolean isAlreadyPlayed, String falseAuthor1,
 			String falseAuthor2, String falseAuthor3) {
 		super();
 		this.id = id;
+		this.playerName = playerName;
 		this.author = author;
 		this.content = content;
 		this.isAlreadyPlayed = isAlreadyPlayed;
@@ -26,12 +26,20 @@ public class tweet {
 		this.falseAuthor3 = falseAuthor3;
 	}
 	
-	public tweet(String author, String content, String falseAuthor1, String falseAuthor2, String falseAuthor3) {
+	public Tweet(String author, String content,String falseAuthor1, String falseAuthor2, String falseAuthor3) {
 		this.author = author;
 		this.content = content;
 		this.falseAuthor1 = falseAuthor1;
 		this.falseAuthor2 = falseAuthor2;
 		this.falseAuthor3 = falseAuthor3;
+	}
+
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
 	}
 
 	public String getId() {
